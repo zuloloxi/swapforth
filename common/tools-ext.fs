@@ -4,6 +4,18 @@
     @ .
 ;
 
+: (.s)
+    depth if
+        >r recurse r>
+        dup .
+    then
+;
+
+: .s
+    [char] < emit depth 0 .r [char] > emit space
+    (.s)
+;
+
 : hex2. ( u -- )
     base @ swap
     hex
@@ -17,7 +29,7 @@
         base @ >r hex
         1- 4 rshift 1+
         0 do
-            cr dup dup 8 u.r space space
+            cr dup dup [ 2 cells ] literal u.r space space
             16 0 do
                 dup c@ hex2. 1+
             loop
@@ -35,26 +47,15 @@
     drop
 ;
 
-: (.s)
-    depth if
-        >r recurse r>
-        dup .
-    then
-;
-
-: .s
-    [char] < emit depth 0 .r [char] > emit space
-    (.s)
-;
-
 \ #######   TOOLS EXT   #######################################
 
 \ From ANS specification A.15.6.2.2533
+\ Using PARSE-NAME instead of "BL WORD COUNT"
 
 : [ELSE]  ( -- )
     1 begin                               \ level
       begin
-        bl word count dup  while          \ level adr len
+        parse-name dup  while             \ level adr len
         2dup  s" [IF]"  compare 0=
         if                                \ level adr len
           2drop 1+                        \ level'
@@ -81,5 +82,5 @@
 : cs-pick   pick ;
 : cs-roll   roll ;
 
-: [defined] bl word find nip 0<> ; immediate
+: [defined] parse-name sfind nip 0<> ?dup and ; immediate
 : [undefined] postpone [defined] 0= ; immediate
